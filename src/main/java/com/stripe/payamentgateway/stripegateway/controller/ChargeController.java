@@ -23,13 +23,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Log
-@Controller
+@RestController
 public class ChargeController {
 
 
@@ -46,7 +47,7 @@ public class ChargeController {
         String stripToken = chargeRequest.getStripeToken();
         String systemUserId = chargeRequest.getSystemUserId();
 
-        return chargeProcessService.doInitialChargeProcess(model, stripeEmail, amount, stripToken, systemUserId);
+        return this.chargeProcessService.doInitialChargeProcess(model, stripeEmail, amount, stripToken, systemUserId);
 
     }
 

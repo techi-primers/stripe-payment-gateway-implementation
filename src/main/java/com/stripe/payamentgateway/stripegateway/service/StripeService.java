@@ -1,8 +1,9 @@
-package com.stripe.payamentgateway.stripegateway.controller;
+package com.stripe.payamentgateway.stripegateway.service;
 
 import com.stripe.Stripe;
 import com.stripe.exception.*;
 import com.stripe.model.Charge;
+import com.stripe.payamentgateway.stripegateway.controller.ChargeRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

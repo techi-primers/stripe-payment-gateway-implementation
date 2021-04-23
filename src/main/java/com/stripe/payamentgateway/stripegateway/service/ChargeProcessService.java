@@ -8,9 +8,7 @@ import com.stripe.exception.*;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
 import com.stripe.model.ExternalAccount;
-import com.stripe.payamentgateway.stripegateway.controller.ChargeController;
 import com.stripe.payamentgateway.stripegateway.controller.ChargeRequest;
-import com.stripe.payamentgateway.stripegateway.controller.StripeService;
 import com.stripe.payamentgateway.stripegateway.dto.ChargingResponseCustom;
 import com.stripe.payamentgateway.stripegateway.dto.SystemPaymentInfo;
 import com.stripe.payamentgateway.stripegateway.entity.ChargingRecordDocument;
@@ -46,7 +44,7 @@ public class ChargeProcessService {
     private static final String END_VIEW_DESCRIPTION_V4 = "Stripe Charging Response Not Success";
     private static final String END_VIEW_DESCRIPTION_V5 = "Issue When Creating Stripe Customer";
     @Autowired
-    StripeService paymentsService;
+    private StripeService stripeService;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
@@ -127,7 +125,9 @@ public class ChargeProcessService {
             } catch (Exception e) {
                 // Something else happened, completely unrelated to Stripe
                 logger.error("Message is: " + e.getMessage());
-                createErrorEndResultModel(model,e.getMessage());
+              //  createErrorEndResultModel(model,e.getMessage());
+                model.addAttribute("status",PAYMENT_FAILED);
+                model.addAttribute("Description", "description");
                 return "result";
             }
 

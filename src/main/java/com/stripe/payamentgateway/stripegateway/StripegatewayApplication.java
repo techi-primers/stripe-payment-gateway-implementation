@@ -1,5 +1,6 @@
 package com.stripe.payamentgateway.stripegateway;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -15,5 +16,8 @@ public class StripegatewayApplication {
 		SpringApplication.run(StripegatewayApplication.class, args);
 	}
 
-
+	@Bean
+	ModelMapper getModelMapper() {
+		return new ModelMapper();
+	}
 }
