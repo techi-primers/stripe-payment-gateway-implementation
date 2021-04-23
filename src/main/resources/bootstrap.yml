@@ -1,0 +1,8 @@
+spring:
+  data:
+    mongodb:
+      username: root
+      password: root
+      database: stripeDB
+      port: 27017
+      host: localhost

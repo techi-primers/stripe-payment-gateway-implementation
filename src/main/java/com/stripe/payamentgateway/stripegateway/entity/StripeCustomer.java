@@ -5,15 +5,18 @@
 package com.stripe.payamentgateway.stripegateway.entity;
 
 import com.stripe.model.*;
+import com.stripe.payamentgateway.stripegateway.dto.SharedModal;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Map;
 
 @Document(collection = "stripe_customer_document")
 @Data
-public class StripeCustomer {
+public class StripeCustomer extends SharedModal {
 
+    @Id
     String id;
     String systemUserId;
     String object;
@@ -21,7 +24,7 @@ public class StripeCustomer {
     String businessVatId;
     Long created;
     String currency;
-    ExpandableField<ExternalAccount> defaultSource;
+    String defaultSource;
     Boolean deleted;
     Boolean delinquent;
     String description;

@@ -9,9 +9,7 @@
             <h3 style='color: green;'>Success!</h3>
             <div>System User Id.: <span th:text='${response.systemUserId}' /></div>
             <div>Status: <span th:text='${response.status}' /></div>
-            <div>Charge id.: <span th:text='${response.chargingResId}' /></div>
-            <div>Amount: <span th:text='${response.amount}' /></div>
-            <div>Receipt Email: <span th:text='${response.receiptEmail}' /></div>
+            <div>Description: <span th:text='${response.description}' /></div>
         </div>
         <a href='/checkout.html'>Checkout again</a>
     </body>

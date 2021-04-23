@@ -3,12 +3,3 @@ server:
 
 STRIPE_SECRET_KEY : sk_test_51IZ2zyB7fkZfvOQILz1ofC7nVyozMMi5bxbFz10AftRj1cglU0fpRESXuYDRtKUCQDresRwUa1aaQlbZq3xhWlnc00faawks0R
 STRIPE_PUBLIC_KEY : pk_test_51IZ2zyB7fkZfvOQIxhO16NXQZdhVl6Y2S2HBt0mkZyUcl5BFwIPVtehutuqer59KMtms3GlrTd79rulhGgNhlfpa00GaKfuV57
-spring:
-  data:
-    mongodb:
-      database: stripeDB
-      port: 27017
-      host: localhost
-      username: root
-      authentication-database: admin
-      password: root

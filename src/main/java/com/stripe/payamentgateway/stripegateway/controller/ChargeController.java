@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -40,7 +41,7 @@ public class ChargeController {
     private Logger logger = LogManager.getLogger(ChargeController.class);
 
     @PostMapping("/charge")
-    public String charge(ChargeRequest chargeRequest, Model model)  {
+    public ModelAndView charge(ChargeRequest chargeRequest, Model model)  {
 
         String stripeEmail = chargeRequest.getStripeEmail();
         Integer amount = chargeRequest.getAmount();

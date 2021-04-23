@@ -13,9 +13,10 @@ public class SystemPaymentInfo {
 
     private String systemUserId; // business partner unique id
     private String customerId;   // stripe customer id
-    private String subscriptionStatus; // ACTIVE DE-ACTIVE
+    private String subscriptionStatus; // success or failed
     private Date  subscriptionStartDate;
     private Date subscriptionEndDate;
     private String SubscriptionDuration; // 1 Month 1 Year ...
+    private String activeStatus; // ACTIVE DE-ACTIVE
 
 }
