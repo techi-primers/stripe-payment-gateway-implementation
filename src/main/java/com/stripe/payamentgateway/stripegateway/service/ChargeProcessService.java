@@ -13,9 +13,12 @@ import com.stripe.payamentgateway.stripegateway.dto.*;
 import com.stripe.payamentgateway.stripegateway.entity.ChargingRecordDocument;
 import com.stripe.payamentgateway.stripegateway.entity.ChargingRecordTrackErrorResponces;
 import com.stripe.payamentgateway.stripegateway.entity.StripeCustomer;
+import com.stripe.payamentgateway.stripegateway.entity.Test;
 import com.stripe.payamentgateway.stripegateway.repository.ChargingRecordDocumentRepository;
 import com.stripe.payamentgateway.stripegateway.repository.ChargingRecordTrackErrorResponcesRepository;
 import com.stripe.payamentgateway.stripegateway.repository.StripeCustomerRepository;
+import com.stripe.payamentgateway.stripegateway.repository.TestRepository;
+import javafx.scene.canvas.GraphicsContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.modelmapper.ModelMapper;
@@ -61,17 +64,33 @@ public class ChargeProcessService {
     @Autowired
     private StripeCustomerRepository stripedCustomerRepository;
     @Autowired
-    private ChargingRecordDocumentRepository chargingResponseCustomRepository;
+    private ChargingRecordDocumentRepository chargingRecordDocumentRepository;
     @Autowired
     private ChargingRecordTrackErrorResponcesRepository chargingRecordTrackErrorResponcesRepository;
 
     private Logger logger = LogManager.getLogger(ChargeProcessService.class);
+    @Autowired
+    private TestRepository testRepository;
+
 
     public ModelAndView doInitialChargeProcess(Model model, String stripeEmail, Integer amount, String  stripToken, String systemUserId) {
 
         if(stripToken!=null && amount!=null && stripToken!=null && systemUserId!=null) {
 
             logger.info("Charging process initiated : systemUserId :"+systemUserId+" Amount : "+amount +" stripe email :"+stripeEmail);
+
+            Optional<ChargingRecordDocument> dbChargingRecord =
+                    this.chargingRecordDocumentRepository.getChargingRecordBySystemUserIdAndActiveStatus(systemUserId, PAYMENT_ACTIVE);
+
+            if(dbChargingRecord.isPresent()) {
+                logger.info("Charging Record Exist given system user");
+                ChargingRecordDocument statusUpdatedRecod = dbChargingRecord.map(val -> {
+                    val.getSystemPaymentInfo().setActiveStatus(PAYMENT_DE_ACTIVE);
+                    return val;
+                }).orElse(null);
+                this.chargingRecordDocumentRepository.save(statusUpdatedRecod);
+                logger.info("current system user de activated "+systemUserId);
+            }
 
             // create customer
             // adding default card to the customer itself
@@ -85,10 +104,11 @@ public class ChargeProcessService {
 
                     logger.info("Stripe Customer created! ");
                     // save customer object with system user
+
                     StripeCustomer stripeCustomer = saveStripedCustomerResponse(systemUserId, customer);
 
-                    Customer customerFromStrped = getCustomerByCustomerId(stripeCustomer.getId());
-                    if(stripeCustomer.getId().equals(customerFromStrped.getId())) {
+                    Customer customerFromStrped = getCustomerByCustomerId(stripeCustomer.getStripeCustomerId());
+                    if(stripeCustomer.getStripeCustomerId().equals(customerFromStrped.getId())) {
 
                         logger.info("Stripe Customer Id Matched!");
                         logger.info("Stripe Customer Id : "+customerFromStrped.getId());
@@ -157,7 +177,7 @@ public class ChargeProcessService {
             // save charge response locally
             ChargingRecordDocument crd = createChargingRecordDoc(systemUserId, customerFromStrped, firstMOnthChargeResponse);
 
-                ChargingRecordDocument chargingrecordsavedObj = chargingResponseCustomRepository.save(crd);
+                ChargingRecordDocument chargingrecordsavedObj = chargingRecordDocumentRepository.save(crd);
                 return Optional.ofNullable(chargingrecordsavedObj).map(rec -> {
 
                     if(rec.getChargingResponseCustom()!=null && rec.getSystemPaymentInfo()!=null) {
@@ -168,7 +188,7 @@ public class ChargeProcessService {
                         PaymentSuccessDto psd = new PaymentSuccessDto();
                         psd.setAmount(rec.getChargingResponseCustom().getAmount()/100);
                         psd.setDescription(rec.getChargingResponseCustom().getDescription());
-                        psd.setReceiptEmail(rec.getChargingResponseCustom().getReceiptEmail());
+                        psd.setReceiptEmail(rec.getChargingResponseCustom().getSource().getName());
                         psd.setStatus(rec.getChargingResponseCustom().getStatus());
                         psd.setSystemUserId(systemUserId);
                         psd.setChargingResId(rec.getChargingResponseCustom().getId());
@@ -197,7 +217,6 @@ public class ChargeProcessService {
         logger.info("creating charging record document");
         ChargingRecordDocument crd = new ChargingRecordDocument();
         final Calendar cal = Calendar.getInstance();
-        String charging_id = "charge_"+UUID.randomUUID().toString();
         SystemPaymentInfo spi = new SystemPaymentInfo();
 
         spi.setCustomerId(customerFromStrped.getId());
@@ -211,13 +230,9 @@ public class ChargeProcessService {
         spi.setSubscriptionEndDate(paymentWillExpireOn);
 
         spi.setSubscriptionStartDate(cal.getTime());
-       // crd.setChargingRecordId(charging_id);
         crd.setSystemPaymentInfo(spi);
         crd.setChargingResponseCustom(this.modelMapper.map(firstMOnthChargeResponse, ChargingResponseCustom.class));
         crd.getChargingResponseCustom().setSource(this.modelMapper.map(firstMOnthChargeResponse.getSource(),ChargeResponseSource.class));
-        // set charging response values
-       //ChargingResponseCustom chargingResponseCustom = new ChargingResponseCustom();
-       //chargingResponseCustom.
         return crd;
     }
 
@@ -257,10 +272,8 @@ public class ChargeProcessService {
 
     private StripeCustomer saveStripedCustomerResponse(String systemUserId, Customer customer) {
         logger.info("Stripe Customer Saving! ");
-        Random random = new Random(System.nanoTime() % 100000);
-        int randomInt = random.nextInt(1000000000);
         StripeCustomer stripeCustomerMapped =  this.modelMapper.map(customer,StripeCustomer.class);
-        //stripeCustomerMapped.setId(randomInt+"");
+        stripeCustomerMapped.setStripeCustomerId(customer.getId());
         stripeCustomerMapped.setDefaultSource(customer.getDefaultSource());
         stripeCustomerMapped.setSystemUserId(systemUserId);
         return this.stripedCustomerRepository.save(stripeCustomerMapped);

@@ -1,8 +1,7 @@
 spring:
   data:
     mongodb:
-      username: root
-      password: root
       database: stripeDB
       port: 27017
-      host: localhost
+      host: 127.0.0.1
+      url: mongodb://localhost:27017/stripeDB?readPreference=primary&appname=MongoDB%20Compass%20Community&ssl=false

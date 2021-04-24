@@ -17,7 +17,8 @@ import java.util.Map;
 public class StripeCustomer extends SharedModal {
 
     @Id
-    String id;
+    String mongoId;
+    String stripeCustomerId;
     String systemUserId;
     String object;
     Long accountBalance;
