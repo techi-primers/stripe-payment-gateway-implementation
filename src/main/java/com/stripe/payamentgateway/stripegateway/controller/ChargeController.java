@@ -11,6 +11,8 @@ import com.stripe.payamentgateway.stripegateway.entity.StripeCustomer;
 import com.stripe.payamentgateway.stripegateway.repository.ChargingRecordDocumentRepository;
 import com.stripe.payamentgateway.stripegateway.repository.StripeCustomerRepository;
 import com.stripe.payamentgateway.stripegateway.service.ChargeProcessService;
+import com.stripe.payamentgateway.stripegateway.service.StripePaymentShedulerService;
+import lombok.Getter;
 import lombok.extern.java.Log;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,6 +41,8 @@ public class ChargeController {
     private ChargeProcessService chargeProcessService;
 
     private Logger logger = LogManager.getLogger(ChargeController.class);
+    @Autowired
+    private StripePaymentShedulerService stripePaymentShedulerService;
 
     @PostMapping("/charge")
     public ModelAndView charge(ChargeRequest chargeRequest, Model model)  {
@@ -50,6 +54,11 @@ public class ChargeController {
 
         return this.chargeProcessService.doInitialChargeProcess(model, stripeEmail, amount, stripToken, systemUserId);
 
+    }
+
+    @GetMapping("/runStripeSheduler")
+    public void runStripeSheduler(){
+        this.stripePaymentShedulerService.paymentShedular();
     }
 
 }

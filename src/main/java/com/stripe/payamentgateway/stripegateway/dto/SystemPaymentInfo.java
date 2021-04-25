@@ -18,5 +18,6 @@ public class SystemPaymentInfo {
     private Date subscriptionEndDate;
     private String SubscriptionDuration; // 1 Month 1 Year ...
     private String activeStatus; // ACTIVE DE-ACTIVE
+    private String transactionExpiringStatus = "NOT_EXPIRED";
 
 }

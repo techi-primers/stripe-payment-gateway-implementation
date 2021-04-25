@@ -32,6 +32,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,6 +60,8 @@ public class ChargeProcessService {
     private static final String ERROR_VIEW_INVALID_PARAMETER = "Invalid parameters were supplied";
     private static final String ERROR_VIEW_AUTHENTICATION_FAILED = "Authentication with Api failed";
     private static final String ERROR_VIEW_SERVICE_ERROR = "Service Error";
+    private static final String TRANSACTION_NOT_EXPIRED = "NOT_EXPIRED";
+    private static final String TRANSACTION_EXPIRED = "EXPIRED";
     @Autowired
     private StripeService stripeService;
     @Autowired
@@ -86,8 +91,10 @@ public class ChargeProcessService {
                 logger.info("Charging Record Exist given system user");
                 ChargingRecordDocument statusUpdatedRecod = dbChargingRecord.map(val -> {
                     val.getSystemPaymentInfo().setActiveStatus(PAYMENT_DE_ACTIVE);
+                    val.setLastModifiedDate(this.getCurrentDate());
                     return val;
                 }).orElse(null);
+
                 this.chargingRecordDocumentRepository.save(statusUpdatedRecod);
                 logger.info("current system user de activated "+systemUserId);
             }
@@ -213,7 +220,7 @@ public class ChargeProcessService {
         }
     }
 
-    private ChargingRecordDocument createChargingRecordDoc(String systemUserId, Customer customerFromStrped, Charge firstMOnthChargeResponse) {
+    public ChargingRecordDocument createChargingRecordDoc(String systemUserId, Customer customerFromStrped, Charge firstMOnthChargeResponse) throws ParseException {
         logger.info("creating charging record document");
         ChargingRecordDocument crd = new ChargingRecordDocument();
         final Calendar cal = Calendar.getInstance();
@@ -224,7 +231,7 @@ public class ChargeProcessService {
         spi.setSubscriptionStatus(PAYMENT_SUCCESS);
         spi.setActiveStatus(PAYMENT_ACTIVE);
         spi.setSubscriptionDuration(PAYMENT_EXPIRING_AFTER);
-
+        spi.setTransactionExpiringStatus(TRANSACTION_NOT_EXPIRED);
         Date paymentWillExpireOn = calculatePaymentExpiredDate(PAYMENT_EXPIRING_AFTER);
         logger.info("Subscription Ending Date "+paymentWillExpireOn);
         spi.setSubscriptionEndDate(paymentWillExpireOn);
@@ -233,10 +240,12 @@ public class ChargeProcessService {
         crd.setSystemPaymentInfo(spi);
         crd.setChargingResponseCustom(this.modelMapper.map(firstMOnthChargeResponse, ChargingResponseCustom.class));
         crd.getChargingResponseCustom().setSource(this.modelMapper.map(firstMOnthChargeResponse.getSource(),ChargeResponseSource.class));
+        crd.setCreatedDate(this.getCurrentDate());
+        crd.setLastModifiedDate(this.getCurrentDate());
         return crd;
     }
 
-    private ChargingRecordTrackErrorResponces createChargingFailedRecordDoc(String systemUserId, Customer customerFromStrped, Charge firstMOnthChargeResponse) {
+    public  ChargingRecordTrackErrorResponces createChargingFailedRecordDoc(String systemUserId, Customer customerFromStrped, Charge firstMOnthChargeResponse) throws ParseException {
         logger.info("creating charging record document");
         ChargingRecordTrackErrorResponces crd = new ChargingRecordTrackErrorResponces();
         SystemPaymentInfo spi = new SystemPaymentInfo();
@@ -253,6 +262,8 @@ public class ChargeProcessService {
         crd.setSystemPaymentInfo(spi);
         crd.setChargingResponseCustom(this.modelMapper.map(firstMOnthChargeResponse, ChargingResponseCustom.class));
         crd.getChargingResponseCustom().setSource(this.modelMapper.map(firstMOnthChargeResponse.getSource(),ChargeResponseSource.class));
+        crd.setCreatedDate(this.getCurrentDate());
+        crd.setLastModifiedDate(this.getCurrentDate());
         // set charging response values
         //ChargingResponseCustom chargingResponseCustom = new ChargingResponseCustom();
         //chargingResponseCustom.
@@ -276,6 +287,8 @@ public class ChargeProcessService {
         stripeCustomerMapped.setStripeCustomerId(customer.getId());
         stripeCustomerMapped.setDefaultSource(customer.getDefaultSource());
         stripeCustomerMapped.setSystemUserId(systemUserId);
+        stripeCustomerMapped.setCreatedDate(getCurrentDate());
+        stripeCustomerMapped.setLastModifiedDate(getCurrentDate());
         return this.stripedCustomerRepository.save(stripeCustomerMapped);
     }
 
@@ -319,7 +332,7 @@ public class ChargeProcessService {
         return customerParameter;
     }
 
-    private Date calculatePaymentExpiredDate(final String durationString) {
+    private Date calculatePaymentExpiredDate(final String durationString) throws ParseException {
         Pattern p = Pattern.compile("[1-9+]+\\s+MONTH|[1-9+]+\\s+YEAR");
         Matcher m = p.matcher(durationString);
 
@@ -340,11 +353,22 @@ public class ChargeProcessService {
                 cal.add(Calendar.YEAR, Integer.parseInt(duration));
                 return new Date(cal.getTime().getTime());
             } else if (scale.equals("MONTH")) {
+                String pattern = "yyyy-MM-dd";
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
                 cal.add(Calendar.MONTH, Integer.parseInt(duration));
-                return new Date(cal.getTime().getTime());
+                String str_date = simpleDateFormat.format(cal.getTime().getTime());
+                DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = formatter.parse(str_date);
+                return date;
             }
         }
         return null;
+    }
+
+    public Date getCurrentDate () {
+        final Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(new Date().getTime());
+        return new Date(cal.getTime().getTime());
     }
 
     @GetMapping("/makeMonthlyPayment")
