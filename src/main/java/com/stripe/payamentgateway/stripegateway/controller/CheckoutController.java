@@ -23,4 +23,10 @@ public class CheckoutController {
         model.addAttribute("systemUserId", systemUserId);
         return "checkout";
     }
+
+    @GetMapping("/plaid_checkout")
+    public String checkout(Model model) {
+
+        return "plaidCheckout";
+    }
 }

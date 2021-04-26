@@ -1,0 +1,100 @@
+<html xmlns='http://www.w3.org/1999/xhtml' xmlns:th='http://www.thymeleaf.org'>
+<head>
+
+<script>
+
+
+
+</script>
+
+</head>
+<body>
+<button onclick="linkHandler.open();" id="linkButton">Open Plaid Link</button>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<!--
+<form id="link-form-id" method="GET"> </form>
+
+
+<form id='plaid-link-form'></form>
+
+<script
+    src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"
+    data-client-name="My App"
+    data-form-id="plaid-link-form"
+    data-key="668c67b769efa58fd9b23d205bfb03"
+    data-product="auth"
+    data-env="sandbox">
+</script>
+-->
+
+<script>
+
+
+/*var linkHandler = Plaid.create({
+  env: 'sandbox',
+  clientName: 'Stripe/Plaid Test',
+  key: 'a9536dd5db33d7bbbdb096c56a1593',
+  product: ['auth'],
+  apiVersion: 'v2',
+  selectAccount: true,
+  onSuccess: function(public_token, metadata) {
+    console.log('public_token: ' + public_token);
+    console.log('metadata: ' + JSON.stringify(metadata));
+
+    // Send the public_token and account ID to your app server.
+    var $form = $('<form>', {
+      'action': '//httpbin.org/post',
+      'method': 'POST'
+    }).append($('<input>', {
+      'name': 'public_token',
+      'value': public_token,
+      'type': 'hidden'
+    })).append($('<input>', {
+      'name': 'account_id',
+      'value': metadata.account.id,
+      'type': 'hidden'
+    }));
+    $(document.body).append($form);
+    $form.submit();
+  },
+});*/
+
+
+var linkHandler = Plaid.create({
+  env: 'sandbox',
+  apiVersion: 'v2',
+  clientName: 'Stripe/Plaid Test',
+  key: '4a56d2de92db147dc4505db7167dcf',
+  product: 'auth',
+  selectAccount: true,
+  onSuccess: function(public_token, metadata) {
+    // Send the public_token and account ID to your app server.
+    console.log(public_token);
+    console.log(metadata);
+    // bubble_fn_account_id(metadata.accounts[0].id);
+    // bubble_fn_account_name(metadata.accounts[0].name);
+    // bubble_fn_account_mask(metadata.accounts[0].mask);
+    // bubble_fn_account_type(metadata.accounts[0].type);
+    // bubble_fn_account_subtype(metadata.accounts[0].subtype);
+    // bubble_fn_institution_name(metadata.institution.name);
+    // bubble_fn_token(public_token);
+
+  },
+  onExit: function(err, metadata) {
+    // The user exited the Link flow.
+    if (err != null) {
+      // The user encountered a Plaid API error prior to exiting.
+    }
+  },
+});
+
+
+
+
+
+</script>
+
+
+
+</body>
+</html>
