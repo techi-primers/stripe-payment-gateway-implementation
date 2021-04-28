@@ -1,0 +1,114 @@
+<html>
+<head>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+
+
+</head>
+
+<body>
+
+<script>
+  require('dotenv').config();
+
+  var express = require('express');
+  var app = express();
+
+  var bodyParser = require('body-parser');
+  app.use(bodyParser.json());
+
+  var path = require('path');
+  var util = require('util');
+
+  var PORT = process.env.PORT || 3000;
+
+  var plaid = require('plaid');
+  var plaidClient = new plaid.Client({
+    clientID: environment.CLIENT_ID,
+    secret: environment.SECRET,
+    env: plaid.environments.sandbox,
+  });
+
+  app.get('/', async (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  });
+
+  app.get('/create-link-token', async (req, res) => {
+    var { link_token: linkToken } = await plaidClient.createLinkToken({
+      user: {
+        client_user_id: 'some-unique-identifier',
+      },
+      client_name: 'App of Tyler',
+      products: ['auth', 'identity'],
+      country_codes: ['US'],
+      language: 'en',
+    });
+
+    res.json({ linkToken });
+  });
+
+  app.post('/token-exchange', async (req, res) => {
+    { publicToken } : req.body;
+    const { access_token: accessToken } = await plaidClient.exchangePublicToken(publicToken);
+    console.log(accessToken);
+
+    const authResponse = await plaidClient.getAuth(accessToken);
+    console.log('Auth response:');
+    console.log(util.inspect(authResponse, false, null, true));
+    console.log('---------------');
+
+    const identityResponse = await plaidClient.getIdentity(accessToken);
+    console.log('Identity response:');
+    console.log(util.inspect(identityResponse, false, null, true));
+    console.log('---------------');
+
+    const balanceResponse = await plaidClient.getBalance(accessToken);
+    console.log('Balance response');
+    console.log(util.inspect(balanceResponse, false, null, true));
+    console.log('---------------');
+
+    res.sendStatus(200);
+  });
+
+  app.listen(PORT, () => {
+    console.log('Listening on port', PORT);
+  });
+
+  (async ($) => {
+    const fetchLinkToken = async () => {
+      const response = await fetch('/create-link-token');
+      const { linkToken } = await response.json();
+      return linkToken;
+    };
+
+    const handler = Plaid.create({
+      token: await fetchLinkToken(),
+      onSuccess: async (publicToken, metadata) => {
+        console.log(publicToken);
+        console.log(metadata);
+        await fetch('/token-exchange', {
+          method: 'POST',
+          body: JSON.stringify({ publicToken }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      },
+      onEvent: (metadata) => {
+        console.log(metadata);
+      },
+      onExit: (error, metadata) => {
+        console.log(error, metadata);
+      },
+    });
+    $('#plaid-button').on('click', function(e) { handler.open(); });
+  })(jQuery);
+
+
+
+
+
+</script>
+</body>
+</html>
+

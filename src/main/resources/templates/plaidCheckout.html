@@ -59,6 +59,8 @@
   },
 });*/
 
+var publicToken;
+var metadata;
 
 var linkHandler = Plaid.create({
   env: 'sandbox',
@@ -71,13 +73,8 @@ var linkHandler = Plaid.create({
     // Send the public_token and account ID to your app server.
     console.log(public_token);
     console.log(metadata);
-    // bubble_fn_account_id(metadata.accounts[0].id);
-    // bubble_fn_account_name(metadata.accounts[0].name);
-    // bubble_fn_account_mask(metadata.accounts[0].mask);
-    // bubble_fn_account_type(metadata.accounts[0].type);
-    // bubble_fn_account_subtype(metadata.accounts[0].subtype);
-    // bubble_fn_institution_name(metadata.institution.name);
-    // bubble_fn_token(public_token);
+     publicToken = public_token
+     metadata = metadata
 
   },
   onExit: function(err, metadata) {
